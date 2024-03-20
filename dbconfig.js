@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
+import pg from "pg";
 
 import { Sequelize } from "sequelize";
 
@@ -18,6 +19,7 @@ export const sequelize = new Sequelize(
     host,
     port,
     dialect: "postgres",
+    dialectModule: pg,
     dialectOptions: {
       ssl: {
         require: true,
