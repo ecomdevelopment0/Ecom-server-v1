@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <button id="rzp-button1">Pay</button>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+      const userId = "e8b1f56f-18eb-454b-8fca-39d00b6d2945";
+      const accessToken =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlOGIxZjU2Zi0xOGViLTQ1NGItOGZjYS0zOWQwMGI2ZDI5NDUiLCJpYXQiOjE3MDUwMzIzODQsImV4cCI6MTcwNTExODc4NH0.p_Ej82yDIFH89Ykdbpu23Ijd-mYGobeU55FHRnmJ9Ms";
+      const BASE_URL =
+        "https://ecom-backend-server-jtg9.onrender.com";
+
+      document.getElementById("rzp-button1").onclick = async function (event) {
+        event.preventDefault();
+        const response = await fetch(
+          `${BASE_URL}/user/payment?userId=${userId}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({}),
+          }
+        );
+        const data = await response.json();
+        if (data.data.id) {
+          const options = {
+            key: "rzp_test_K7MzkROXUd43Ey", // Replace with your Razorpay Key ID
+            amount: data.data.amount,
+            currency: "INR",
+            order_id: data.data.id,
+            handler: function (response) {
+              // Handle payment success
+              const paymentResponse = response.razorpay_payment_id;
+              const order_id = response.razorpay_order_id;
+              const signature = response.razorpay_signature;
+              // const receipt = response.receipt
+              console.log(
+                "response.razorpay_signature",
+                response.razorpay_signature
+              );
+              console.log(
+                "response.razorpay_payment_id",
+                response.razorpay_payment_id
+              );
+              fetch(`${BASE_URL}/user/payment/check?userId=${userId}`, {
+                //userId in the url is required
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                  order_id: order_id,
+                  razorpay_payment_id: paymentResponse,
+                  razorpay_signature: signature,
+                  // amount : data.amount,
+                }),
+              })
+                .then((response) => response.json())
+                .then((res) => {
+                  console.log("data --> ", res);
+                  console.log("Payment successful!");
+                  // if (res.status == 200) {
+                  //   console.log("Payment successful!");
+
+                  //   fetch(`${BASE_URL}/user/order?userId=${userId}`, {
+                  //     //userId in the url is required
+                  //     method: "POST",
+                  //     headers: {
+                  //       "Content-Type": "application/json",
+                  //       Authorization: `Bearer ${accessToken}`,
+                  //     },
+                  //     body: JSON.stringify({
+                  //       order_id: order_id, //razorpay order id
+                  //       razorpay_payment_id: paymentResponse,
+                  //       razorpay_signature: signature,
+                  //     }),
+                  //   });
+                  //   alert("Payment successful!");
+                  // } else if (res.status == 400) {
+                  //   alert("Payment verification failed.");
+                  // }
+                });
+            },
+          };
+
+          const rzp1 = new Razorpay(options);
+          rzp1.on("payment.failed", async function (response) {
+            setTimeout(() => {
+              rzp1.close();
+            }, 1000);
+            // rzp1.close();
+            await fetch(`${BASE_URL}/user/payment/failed?userId=${userId}`, {
+              //userId in the url is required
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({
+                order_id: response.error.metadata.order_id,
+                razorpay_payment_id: response.error.metadata.payment_id,
+                razorpay_signature: "null",
+                reason: response.error.reason,
+              }),
+            });
+
+            alert(response.error.description);
+            alert(response.error.reason);
+          });
+
+          rzp1.on("subscription.cancelled", async function (res) {
+            console.log("inside the cancel");
+          });
+
+          rzp1.open();
+
+          const timeOut = setTimeout(() => {
+            rzp1.close();
+          }, 1000 * 60 * 3);
+        }
+      };
+    </script>
+  </body>
+</html>
