@@ -8,11 +8,14 @@ import {
   verifyAndRegister,
   verifyAndChangePassword,
   healthzController,
+  updateUserDetails,
 } from "../../controllers/user/users.js";
 import requireUserAuth from "../../middlewares/requireUserAuth.js";
 import { sendOtp } from "../../controllers/verification/emailVerification.js";
 import {
+  addToCart,
   getCartByUser,
+  removeFromCart,
   updateCart,
 } from "../../controllers/cartOrders/carts.js";
 import {
@@ -39,8 +42,11 @@ router.post("/user/forgot-password/verify", verifyAndChangePassword);
 router.post("/user/send-otp", sendOtp);
 
 // cart routes
+router.post("/user/update/:id", requireUserAuth, updateUserDetails);
 router.get("/user/cart", requireUserAuth, getCartByUser);
 router.post("/user/cart", requireUserAuth, updateCart);
+router.post("/user/cart/add", requireUserAuth, addToCart);
+router.post("/user/cart/remove", requireUserAuth, removeFromCart);
 // router.post('/user/:userId/cart',  updateCart)
 
 // payment routes

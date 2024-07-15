@@ -66,9 +66,10 @@ export const userSignUp = async (req, res, next) => {
     res.status(200).send({
       message: "OTP sent to email",
       otp_token: otpToken,
+      otp,
     });
   } catch (error) {
-    console.log("error is here -->",error);
+    console.log("error is here -->", error);
     res.status(400).json({ error: error.message });
   }
 };
@@ -121,7 +122,6 @@ export const verifyAndRegister = async (req, res) => {
     );
 
     res.status(200).json({
-      message: "User Registered",
       userId: newUser.userId,
       name: newUser.name,
       email: newUser.email,
@@ -310,3 +310,31 @@ export const changePassword = asyncErrorHandler(async (req, res, next) => {
   if (updatedUser[0] !== 1) return false;
   return true;
 });
+
+export const updateUserDetails = async (req, res) => {
+  try {
+    const { name, email, phoneNo, city, state, password } = req.body;
+    const { id } = req.params;
+    await db.User.update(
+      {
+        name,
+        email,
+        phoneNo,
+        city,
+        state,
+        password,
+      },
+      {
+        where: {
+          userId: id,
+        },
+      }
+    );
+    res.status(200).json({
+      status: true,
+      message: "Successfull",
+    });
+  } catch (error) {
+    res.status(400).json({ status: false, error: error.message });
+  }
+};

@@ -94,7 +94,6 @@ export const getUserCart = asyncErrorHandler(async (req, res, next) => {
 
   cart.products = filteredProducts;
   await cart.save();
-
   return cart;
 });
 
@@ -310,3 +309,11 @@ export const searchResult = asyncErrorHandler(async (req, res, next) => {
   }
   res.status(200).json(result);
 });
+
+export function calculateAverageRating(reviews) {
+  if (reviews.length === 0) return 0;
+  const totalStars = reviews.reduce((total, review) => total + review.stars, 0);
+  const average = totalStars / reviews.length;
+  const roundedAverage = Math.round(average * 10) / 10;
+  return Math.min(roundedAverage, 5);
+}
