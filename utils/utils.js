@@ -73,7 +73,7 @@ export const order = asyncErrorHandler(async (req, res, next) => {
 });
 
 export const getUserCart = asyncErrorHandler(async (req, res, next) => {
-  const userId = req.params.userId;
+  const userId = req.query.userId;
   const cart = await db.Cart.findOne({ where: { userId } });
 
   let filteredProducts = [];
@@ -101,7 +101,6 @@ export const calculateOrderAmount = asyncErrorHandler(
   async (req, res, next) => {
     // const userId = req.params.userId;
     const userCart = await getUserCart(req, res, next);
-
     let totalAmount = 0;
     let ind = -1;
 
@@ -110,12 +109,12 @@ export const calculateOrderAmount = asyncErrorHandler(
       const { productId } = product;
 
       const response = await Product.findByPk(productId, {
-        attributes: ["actualPrice"],
+        attributes: ["marketPrice"],
       });
-      userCart.products[ind].price = response["actualPrice"];
+      userCart.products[ind].price = response["marketPrice"];
 
-      if (response["actualPrice"] > 0 && response["actualPrice"] != null)
-        totalAmount += response["actualPrice"] * product["quantity"];
+      if (response["marketPrice"] > 0 && response["marketPrice"] != null)
+        totalAmount += response["marketPrice"] * product["quantity"];
       else
         return next(
           new ErrorHandler(
@@ -213,6 +212,36 @@ export const unlockKeys = asyncErrorHandler(async (req, res, next) => {
     }
   }
 });
+
+export const unlockKeysIndividual = async (userId) => {
+  const { products } = await lockedKeys.findOne({
+    where: { userId },
+  });
+
+  for (let product of products) {
+    const { productKeys } = product;
+    if (!productKeys) {
+      throw new ErrorHandler(
+        "keys not available, order has been sent to pendingDeliveries",
+        400
+      );
+    }
+
+    for (let productKey of productKeys) {
+      await db.ProductKey.update(
+        {
+          isSold: false,
+        },
+        {
+          where: {
+            productKey: productKey,
+            orderId: null,
+          },
+        }
+      );
+    }
+  }
+};
 
 export const getRandomString = (length) => {
   let chars = [
@@ -316,4 +345,10 @@ export function calculateAverageRating(reviews) {
   const average = totalStars / reviews.length;
   const roundedAverage = Math.round(average * 10) / 10;
   return Math.min(roundedAverage, 5);
+}
+
+export function calculateGST(totalAmount) {
+  const gstPercentage = 0.18; // 18% as a decimal
+  const gstAmount = totalAmount * gstPercentage;
+  return gstAmount;
 }

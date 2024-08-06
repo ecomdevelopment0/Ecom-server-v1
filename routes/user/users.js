@@ -24,6 +24,7 @@ import {
   createOrder,
   getAllOrdersOfUser,
   initiatePayment,
+  initiatePaymentIndividual,
   paymentFailed,
 } from "../../controllers/cartOrders/orders.js";
 
@@ -54,6 +55,10 @@ router.post("/user/payment", requireUserAuth, initiatePayment);
 router.post("/user/payment/check", requireUserAuth, checkPayment);
 router.post("/user/payment/webhook", checkPayment2);
 router.post("/user/payment/failed", requireUserAuth, paymentFailed);
+// individual payment routes
+router.post("/user/individual/payment", requireUserAuth, initiatePaymentIndividual);
+router.post("/user/individual/payment/check", requireUserAuth, checkPayment);
+router.post("/user/individual/payment/failed", requireUserAuth, paymentFailed);
 
 // order routes
 router.get("/user/order", requireUserAuth, getAllOrdersOfUser);

@@ -129,7 +129,6 @@ export const removeFromCart = async (req, res, next) => {
     const prod = req.query.prod;
     const userId = req.query.userId;
     const { productId } = req.body;
-    console.log({ prod, userId, productId });
     const user = await getUserCart(req, res, next);
     const productIndex = user.products.findIndex(
       (product) => product.productId === productId
